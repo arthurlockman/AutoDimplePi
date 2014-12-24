@@ -9,6 +9,19 @@
 
 using namespace std;
 
+
+void indexCarousel()
+{
+	digitalWrite(DIR_PIN, HIGH);
+	for (int i = 0; i < INDEX_COUNTS; i++)
+	{
+		digitalWrite(PULSE_PIN, HIGH);
+		delay(1);
+		digitalWrite(PULSE_PIN, LOW);
+		delay(1);
+	}
+} 
+
 int main ( int argc, char ** argv )
 {
 	//Initialize camera.
@@ -22,21 +35,25 @@ int main ( int argc, char ** argv )
 	wiringPiSetup();
 	pinMode(DIR_PIN, OUTPUT);
 	pinMode(PULSE_PIN, OUTPUT);
-	//Do stuff here
 	
+	//Initialize UI
+	cv::namedWindow("AutoDimple", 1);
+
+	//Do stuff
+	Camera.grab();
+	Camera.retrieve(image);
+	cv::imshow("AutoDimple", image);
+	for (int i = 0; i < 16; i++)
+	{
+		Camera.grab();
+		Camera.retrieve(image);
+		cv::imshow("AutoDimple", image);
+		indexCarousel();
+		cv::waitKey(0);
+	}
 	Camera.release();
+	cv::waitKey(0);
 	return 0;
 }
 
-static void indexCarousel()
-{
-	digitalWrite(DIR_PIN, HIGH);
-	for (int i = 0; i < INDEX_COUNTS; i++)
-	{
-		digitalWrite(PULSE_PIN, HIGH);
-		delay(1);
-		digitalWrite(PULSE_PIN, LOW);
-		delay(1);
-	}
-} 
 

@@ -1,9 +1,12 @@
 #include <ctime>
 #include <iostream>
 #include <raspicam/raspicam_cv.h>
-extern "C" {
 #include <wiringPi.h>
-}
+
+#define DIR_PIN 0
+#define PULSE_PIN 1
+#define INDEX_COUNTS 400
+
 using namespace std;
 
 int main ( int argc, char ** argv )
@@ -17,10 +20,23 @@ int main ( int argc, char ** argv )
 	
 	//Initialize GPIO.
 	wiringPiSetup();
-	pinMode(0, OUTPUT);
+	pinMode(DIR_PIN, OUTPUT);
+	pinMode(PULSE_PIN, OUTPUT);
 	//Do stuff here
 	
 	Camera.release();
 	return 0;
 }
+
+static void indexCarousel()
+{
+	digitalWrite(DIR_PIN, HIGH);
+	for (int i = 0; i < INDEX_COUNTS; i++)
+	{
+		digitalWrite(PULSE_PIN, HIGH);
+		delay(1);
+		digitalWrite(PULSE_PIN, LOW);
+		delay(1);
+	}
+} 
 

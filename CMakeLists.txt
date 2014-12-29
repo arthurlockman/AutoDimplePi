@@ -11,3 +11,5 @@ target_link_libraries(autodimplepi ${raspicam_CV_LIBS})
 target_link_libraries(autodimplepi wiringPi)
 
 SET(CMAKE_C_COMPILER /usr/bin/gcc)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+

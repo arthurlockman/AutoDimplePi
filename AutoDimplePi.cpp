@@ -11,7 +11,6 @@
 
 using namespace std;
 
-
 void indexCarousel()
 {
 	digitalWrite(DIR_PIN, HIGH);
@@ -42,13 +41,14 @@ int main ( int argc, char ** argv )
 	
 	//Initialize UI
 	cv::namedWindow("AutoDimple", 1);
-
-	//Do stuff
+	cout << "window initialized" << endl;
 	Camera.grab();
 	Camera.retrieve(image);
 	cv::imshow("AutoDimple", image);
+	cv::waitKey(1000);
 	for (int i = 0; i < 16; i++)
 	{
+		cout << "Grabbing image..." << endl;
 		Camera.grab();
 		Camera.retrieve(image);
 		baseImage = image.clone();
@@ -56,20 +56,21 @@ int main ( int argc, char ** argv )
 		blur(image, image, cv::Size(3, 3));
 		std::vector<cv::Vec3f> circles;
 		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, image.rows, 200, 100, 1, 1000);
+		cout << "Circles found: " << circles.size() << endl;
 		for (int i = 0; i < circles.size(); i++)
 		{
 			cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
 			int radius = cvRound(circles[i][2]);
+			printf("radius: %d", radius);
 			cv::circle(image, center, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
 			cv::circle(image, center, radius, cv::Scalar(255, 255, 255), 3, 8, 0);
 		}
 		cv::imshow("AutoDimple", image);
+		cv::waitKey(1000);
 		indexCarousel();
-		cv::waitKey(0);
 	}
 	Camera.release();
 	cv::waitKey(0);
 	return 0;
 }
-
 

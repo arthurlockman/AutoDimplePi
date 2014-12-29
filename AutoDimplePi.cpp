@@ -48,10 +48,12 @@ int main ( int argc, char ** argv )
 	cv::waitKey(1000);
 	for (int i = 0; i < 19; i++)
 	{
+		delay(1000);
 		cout << "Grabbing image..." << endl;
 		Camera.grab();
 		Camera.retrieve(image);
 		baseImage = image.clone();
+		image = image(cv::Rect(160, 0, 960, 960));
 		equalizeHist(image, image);
 		blur(image, image, cv::Size(3, 3));
 		std::vector<cv::Vec3f> circles;
@@ -76,8 +78,8 @@ int main ( int argc, char ** argv )
 		os << "/home/pi/Desktop/AutoDimple Pictures/" << (now->tm_year + 1900) 
 			<< "_" << (now->tm_mon + 1) << "_" << (now->tm_mday) <<  "-" 
 			<< (now->tm_hour) << "_" << (now->tm_min) << "_" << (now->tm_sec) 
-			<< ".jpg" << endl;
-		cout << os.str();
+			<< ".jpg";
+		cout << os.str() << endl;
 		cv::imwrite(os.str(), image);
 	}
 	Camera.release();

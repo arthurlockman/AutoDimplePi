@@ -7,7 +7,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #define DIR_PIN 0
 #define PULSE_PIN 1
-#define INDEX_COUNTS 400
+#define INDEX_COUNTS 3200
 
 using namespace std;
 
@@ -17,9 +17,9 @@ void indexCarousel()
 	for (int i = 0; i < INDEX_COUNTS; i++)
 	{
 		digitalWrite(PULSE_PIN, HIGH);
-		delay(1);
+		delayMicroseconds(100);
 		digitalWrite(PULSE_PIN, LOW);
-		delay(1);
+		delayMicroseconds(100);
 	}
 } 
 
@@ -46,7 +46,7 @@ int main ( int argc, char ** argv )
 	Camera.retrieve(image);
 	cv::imshow("AutoDimple", image);
 	cv::waitKey(1000);
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 19; i++)
 	{
 		cout << "Grabbing image..." << endl;
 		Camera.grab();

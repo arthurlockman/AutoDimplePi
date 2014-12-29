@@ -68,9 +68,20 @@ int main ( int argc, char ** argv )
 		cv::imshow("AutoDimple", image);
 		cv::waitKey(1000);
 		indexCarousel();
+
+		//Write image
+		time_t t = time(0);
+		struct tm * now = localtime(&t);
+		ostringstream os;
+		os << "/home/pi/Desktop/AutoDimple Pictures/" << (now->tm_year + 1900) 
+			<< "_" << (now->tm_mon + 1) << "_" << (now->tm_mday) <<  "-" 
+			<< (now->tm_hour) << "_" << (now->tm_min) << "_" << (now->tm_sec) 
+			<< ".jpg" << endl;
+		cout << os.str();
+		cv::imwrite(os.str(), image);
 	}
 	Camera.release();
-	cv::waitKey(0);
+	//cv::waitKey(0);
 	return 0;
 }
 

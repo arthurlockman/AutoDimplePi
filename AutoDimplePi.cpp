@@ -15,8 +15,11 @@
 
 using namespace std;
 
+int carousel_index = 1;
+
 void indexCarousel()
 {
+	cout << "Carousel at " << carousel_index << endl;
 	for (int i = 0; i < INDEX_COUNTS; i++)
 	{
 		digitalWrite(PULSE_PIN, HIGH);
@@ -24,7 +27,13 @@ void indexCarousel()
 		digitalWrite(PULSE_PIN, LOW);
 		delayMicroseconds(100);
 	}
-} 
+	(carousel_index == 19) ? carousel_index = 1 : carousel_index++;
+}
+
+void homeCarousel()
+{
+	while (carousel_index != 1) { indexCarousel(); }
+}
 
 void gracefulShutdown(int s) 
 {
@@ -38,6 +47,7 @@ void checkWindow()
 	int c = cv::waitKey(1);
 	if (!cvGetWindowHandle("AutoDimple")) gracefulShutdown(2);
 }
+
 int main ( int argc, char ** argv )
 {
 	//Setup graceful shutdown handler
@@ -140,16 +150,20 @@ int main ( int argc, char ** argv )
 	Camera.release();
 
 	//Eject Slides
+	while (carousel_index != 4) { indexCarousel(); }
 	system("zenity --info --text=\"<b><big>Eject Slides</big></b>\n\nPull slides out of eject slot.\n\nTo advance carousel, press SPACE. To finish, press ESC.\"");
 	for (j = 0; j < 19; j++)
 	{
+		checkWindow();
 		char k;
 		k = cv::waitKey(0);
 		if (k ==  27) break;
 		indexCarousel();
 	}
+
 	system("zenity --info --text=\"<b><big>Complete!</big></b>\n\nProcess complete! Data can be found on the desktop in the <i>AutoDimple Pictures</i> folder.\"");
 	//system("pcmanfm /home/pi/Desktop/AutoDimple\\ Pictures/");
+	homeCarousel();
 	digitalWrite(ENABLE_PIN, HIGH);
 	return 0;
 }

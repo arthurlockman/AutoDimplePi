@@ -161,10 +161,10 @@ int main ( int argc, char ** argv )
 		indexCarousel();
 	}
 
-	system("zenity --info --text=\"<b><big>Complete!</big></b>\n\nProcess complete! Data can be found on the desktop in the <i>AutoDimple Pictures</i> folder.\"");
 	//system("pcmanfm /home/pi/Desktop/AutoDimple\\ Pictures/");
 	homeCarousel();
 	digitalWrite(ENABLE_PIN, HIGH);
+	system("zenity --info --text=\"<b><big>Complete!</big></b>\n\nProcess complete! Data can be found on the desktop in the <i>AutoDimple Pictures</i> folder.\"");
 	return 0;
 }
 

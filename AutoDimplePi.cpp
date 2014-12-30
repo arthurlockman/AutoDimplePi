@@ -5,15 +5,17 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#define DIR_PIN 0
+
+#define ENABLE_PIN 15
 #define PULSE_PIN 1
+#define EMIT_PIN 5
+#define DETECT_PIN 4
 #define INDEX_COUNTS 3200
 
 using namespace std;
 
 void indexCarousel()
 {
-	digitalWrite(DIR_PIN, HIGH);
 	for (int i = 0; i < INDEX_COUNTS; i++)
 	{
 		digitalWrite(PULSE_PIN, HIGH);
@@ -36,12 +38,35 @@ int main ( int argc, char ** argv )
 	
 	//Initialize GPIO.
 	wiringPiSetup();
-	pinMode(DIR_PIN, OUTPUT);
+	pinMode(ENABLE_PIN, OUTPUT);
 	pinMode(PULSE_PIN, OUTPUT);
-	
+	pinMode(EMIT_PIN, OUTPUT);
+	pinMode(DETECT_PIN, INPUT);
+
+	digitalWrite(EMIT_PIN, HIGH);
+	digitalWrite(ENABLE_PIN, LOW);
+
 	//Initialize UI
 	cv::namedWindow("AutoDimple", 1);
 	cout << "window initialized" << endl;
+	
+	//Load Slides
+	system("zenity --info --text=\"<b><big>Load Slides</big></b>\n\n To advance carousel, press SPACE. To finish, press ESC.\"");
+	cout << "Load slides." << endl;
+	int j;
+	for (j = 0; j < 19; j++)
+	{
+		cout << "Press space to advance carousel. Press ESC when done." << endl;
+		char k;
+		k = cv::waitKey(0);
+		if (k == 27) break;
+		indexCarousel();
+	}
+	for (; j < 27; j++)
+	{
+		indexCarousel();
+	}
+
 	Camera.grab();
 	Camera.retrieve(image);
 	cv::imshow("AutoDimple", image);
@@ -53,7 +78,7 @@ int main ( int argc, char ** argv )
 		Camera.grab();
 		Camera.retrieve(image);
 		baseImage = image.clone();
-		image = image(cv::Rect(160, 0, 960, 960));
+		image = image(cv::Rect(260, 0, 700, 700));
 		equalizeHist(image, image);
 		blur(image, image, cv::Size(3, 3));
 		std::vector<cv::Vec3f> circles;
@@ -83,7 +108,19 @@ int main ( int argc, char ** argv )
 		cv::imwrite(os.str(), image);
 	}
 	Camera.release();
-	//cv::waitKey(0);
+
+	//Eject Slides
+	system("zenity --info --text=\"<b><big>Eject Slides</big></b>\n\nPull slides out of eject slot.\n\nTo advance carousel, press SPACE. To finish, press ESC.\"");
+	for (j = 0; j < 19; j++)
+	{
+		char k;
+		k = cv::waitKey(0);
+		if (k ==  27) break;
+		indexCarousel();
+	}
+	system("zenity --info --text=\"<b><big>Complete!</big></b>\n\nProcess complete! Data can be found on the desktop in the <i>AutoDimple Pictures</i> folder.\"");
+	//system("pcmanfm /home/pi/Desktop/AutoDimple\\ Pictures/");
+	digitalWrite(ENABLE_PIN, HIGH);
 	return 0;
 }
 

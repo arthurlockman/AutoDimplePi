@@ -5,6 +5,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <signal.h>
 
 #define ENABLE_PIN 15
 #define PULSE_PIN 1
@@ -25,8 +26,26 @@ void indexCarousel()
 	}
 } 
 
+void gracefulShutdown(int s) 
+{
+	cout << "Caught SIGINT, shutting down." << endl;
+	digitalWrite(ENABLE_PIN, HIGH);
+	exit(0);
+}
+
+void checkWindow()
+{
+	int c = cv::waitKey(1);
+	if (!cvGetWindowHandle("AutoDimple")) gracefulShutdown(2);
+}
 int main ( int argc, char ** argv )
 {
+	//Setup graceful shutdown handler
+	struct sigaction sigIntHandler;
+	sigIntHandler.sa_handler = gracefulShutdown;
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigaction(SIGINT, &sigIntHandler, NULL);
+
 	//Initialize camera.
 	raspicam::RaspiCam_Cv Camera;
 	cv::Mat image;
@@ -54,26 +73,36 @@ int main ( int argc, char ** argv )
 	system("zenity --info --text=\"<b><big>Load Slides</big></b>\n\n To advance carousel, press SPACE. To finish, press ESC.\"");
 	cout << "Load slides." << endl;
 	int j;
-	for (j = 0; j < 19; j++)
+	int loaded_slides = 0;
+	for (j = 0; j < 18; j++)
 	{
+		if (j == 11) indexCarousel();
 		cout << "Press space to advance carousel. Press ESC when done." << endl;
+		loaded_slides++;
 		char k;
 		k = cv::waitKey(0);
 		if (k == 27) break;
 		indexCarousel();
+		checkWindow();
 	}
+	if (j <= 8) j = 27 - (8 - j);
+	else if (j >= 11) { j++; }
 	for (; j < 27; j++)
 	{
 		indexCarousel();
+		checkWindow();
 	}
 
 	Camera.grab();
 	Camera.retrieve(image);
 	cv::imshow("AutoDimple", image);
 	cv::waitKey(1000);
-	for (int i = 0; i < 19; i++)
+	cout << "Loaded slides: " << loaded_slides << endl;
+	for (int i = 0; i < loaded_slides; i++)
 	{
-		delay(1000);
+		checkWindow();
+		if (i == 11) indexCarousel();
+		//delay(1000);
 		cout << "Grabbing image..." << endl;
 		Camera.grab();
 		Camera.retrieve(image);
@@ -106,6 +135,7 @@ int main ( int argc, char ** argv )
 			<< ".jpg";
 		cout << os.str() << endl;
 		cv::imwrite(os.str(), image);
+		checkWindow();
 	}
 	Camera.release();
 

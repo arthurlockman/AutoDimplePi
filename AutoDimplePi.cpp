@@ -59,7 +59,7 @@ int main ( int argc, char ** argv )
 	//Initialize camera.
 	raspicam::RaspiCam_Cv Camera;
 	cv::Mat image;
-	cv::Mat baseImage;
+	cv::Mat threshimage;
 	cv::Mat roi;
 	Camera.set(CV_CAP_PROP_FORMAT, CV_8UC1);
 	cout << "Opening camera device..." << endl;
@@ -74,7 +74,7 @@ int main ( int argc, char ** argv )
 
 	digitalWrite(EMIT_PIN, HIGH);
 	digitalWrite(ENABLE_PIN, LOW);
-
+	
 	//Initialize UI
 	cv::namedWindow("AutoDimple", 1);
 	cout << "window initialized" << endl;
@@ -116,18 +116,19 @@ int main ( int argc, char ** argv )
 		cout << "Grabbing image..." << endl;
 		Camera.grab();
 		Camera.retrieve(image);
-		baseImage = image.clone();
 		image = image(cv::Rect(260, 0, 700, 700));
 		equalizeHist(image, image);
-		blur(image, image, cv::Size(3, 3));
+		//blur(image, image, cv::Size(3, 3));
+		cv::threshold(image, threshimage, 80, 200, cv::THRESH_BINARY);
+		
 		std::vector<cv::Vec3f> circles;
-		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, image.rows, 200, 100, 1, 1000);
+		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 50, 50, 240);
 		cout << "Circles found: " << circles.size() << endl;
 		for (int i = 0; i < circles.size(); i++)
 		{
 			cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
 			int radius = cvRound(circles[i][2]);
-			printf("radius: %d", radius);
+			printf("radius: %d\n", radius);
 			cv::circle(image, center, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
 			cv::circle(image, center, radius, cv::Scalar(255, 255, 255), 3, 8, 0);
 		}

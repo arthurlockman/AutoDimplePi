@@ -117,12 +117,11 @@ int main ( int argc, char ** argv )
 		Camera.grab();
 		Camera.retrieve(image);
 		image = image(cv::Rect(260, 0, 700, 700));
-		equalizeHist(image, image);
+		cv::imshow("AutoDimple", image);
+		//equalizeHist(image, image);
 		//blur(image, image, cv::Size(3, 3));
-		cv::threshold(image, threshimage, 80, 200, cv::THRESH_BINARY);
-		
 		std::vector<cv::Vec3f> circles;
-		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 50, 50, 240);
+		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 50, 100, 240);
 		cout << "Circles found: " << circles.size() << endl;
 		for (int i = 0; i < circles.size(); i++)
 		{

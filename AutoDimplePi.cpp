@@ -59,7 +59,6 @@ int main ( int argc, char ** argv )
 	//Initialize camera.
 	raspicam::RaspiCam_Cv Camera;
 	cv::Mat image;
-	cv::Mat threshimage;
 	cv::Mat roi;
 	Camera.set(CV_CAP_PROP_FORMAT, CV_8UC1);
 	cout << "Opening camera device..." << endl;
@@ -113,21 +112,39 @@ int main ( int argc, char ** argv )
 		checkWindow();
 		if (i == 11) indexCarousel();
 		//delay(1000);
+		
 		cout << "Grabbing image..." << endl;
 		Camera.grab();
 		Camera.retrieve(image);
-		image = image(cv::Rect(260, 0, 700, 700));
+		image = image(cv::Rect(360, 100, 500, 500));
 		cv::imshow("AutoDimple", image);
-		//equalizeHist(image, image);
-		//blur(image, image, cv::Size(3, 3));
+		
+		equalizeHist(image, image);
+		blur(image, image, cv::Size(3, 3));
+		
+		cv::Point center;
+		int radius;
 		std::vector<cv::Vec3f> circles;
-		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 50, 100, 240);
+		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 75, 150, 240);
 		cout << "Circles found: " << circles.size() << endl;
 		for (int i = 0; i < circles.size(); i++)
 		{
-			cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-			int radius = cvRound(circles[i][2]);
-			printf("radius: %d\n", radius);
+			center = cv::Point(cvRound(circles[i][0]), cvRound(circles[i][1]));
+			radius = cvRound(circles[i][2]);
+			cv::circle(image, center, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
+			cv::circle(image, center, radius, cv::Scalar(255, 255, 255), 3, 8, 0);
+		}
+		cout << "Center at (" << center.x << "," << center.y << "), radius "<< radius << endl;
+		
+		//Process ROI
+		cv::Point dimpleCenter;
+		int dimpleRadius;
+		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 75, 10, 150);
+		cout << "Circles found: " << circles.size() << endl;
+		for (int i = 0; i < circles.size(); i++)
+		{
+			dimpleCenter = cv::Point(cvRound(circles[i][0]), cvRound(circles[i][1]));
+			dimpleRadius = cvRound(circles[i][2]);
 			cv::circle(image, center, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
 			cv::circle(image, center, radius, cv::Scalar(255, 255, 255), 3, 8, 0);
 		}

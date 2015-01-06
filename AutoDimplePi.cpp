@@ -6,16 +6,19 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <signal.h>
+#include <math.h>
 
 #define ENABLE_PIN 15
 #define PULSE_PIN 1
 #define EMIT_PIN 5
 #define DETECT_PIN 4
 #define INDEX_COUNTS 3200
+#define PULSE_TIME 75
 
 using namespace std;
 
 int carousel_index = 1;
+int THRESHOLD_VAL = 1;
 
 void indexCarousel()
 {
@@ -23,16 +26,31 @@ void indexCarousel()
 	for (int i = 0; i < INDEX_COUNTS; i++)
 	{
 		digitalWrite(PULSE_PIN, HIGH);
-		delayMicroseconds(100);
+		delayMicroseconds(PULSE_TIME);
 		digitalWrite(PULSE_PIN, LOW);
-		delayMicroseconds(100);
+		delayMicroseconds(PULSE_TIME);
 	}
 	(carousel_index == 19) ? carousel_index = 1 : carousel_index++;
 }
 
+void goToIndex(int index)
+{
+	cout << "Driving to index " << index << endl;
+	int slots = abs((index + 19) - carousel_index);
+	for (int i = 0; i < INDEX_COUNTS * slots; i++)
+	{
+		digitalWrite(PULSE_PIN, HIGH);
+		delayMicroseconds(PULSE_TIME);
+		digitalWrite(PULSE_PIN, LOW);
+		delayMicroseconds(PULSE_TIME);
+	}
+	carousel_index = index;
+}
+
 void homeCarousel()
 {
-	while (carousel_index != 1) { indexCarousel(); }
+	//while (carousel_index != 1) { indexCarousel(); }
+	goToIndex(1);
 }
 
 void gracefulShutdown(int s) 
@@ -77,7 +95,9 @@ int main ( int argc, char ** argv )
 	//Initialize UI
 	cv::namedWindow("AutoDimple", 1);
 	cout << "window initialized" << endl;
-	
+	cv::createTrackbar("Threshold", "AutoDimple", &THRESHOLD_VAL, 255);
+	cv::setTrackbarPos("Threshold", "AutoDimple", 255);
+
 	//Load Slides
 	system("zenity --info --text=\"<b><big>Load Slides</big></b>\n\n To advance carousel, press SPACE. To finish, press ESC.\"");
 	cout << "Load slides." << endl;
@@ -94,14 +114,14 @@ int main ( int argc, char ** argv )
 		indexCarousel();
 		checkWindow();
 	}
-	if (j <= 8) j = 27 - (8 - j);
-	else if (j >= 11) { j++; }
-	for (; j < 27; j++)
-	{
-		indexCarousel();
-		checkWindow();
-	}
-
+	//if (j <= 8) j = 27 - (8 - j);
+	//else if (j >= 11) { j++; }
+	//for (; j < 27; j++)
+	//{
+	//	indexCarousel();
+	//	checkWindow();
+	//}
+	goToIndex(9);
 	Camera.grab();
 	Camera.retrieve(image);
 	cv::imshow("AutoDimple", image);
@@ -121,11 +141,12 @@ int main ( int argc, char ** argv )
 		
 		equalizeHist(image, image);
 		blur(image, image, cv::Size(3, 3));
-		
+		image.copyTo(roi);
+
 		cv::Point center;
-		int radius;
+		int radius = -1;
 		std::vector<cv::Vec3f> circles;
-		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 75, 150, 240);
+		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 50, 170, 230);
 		cout << "Circles found: " << circles.size() << endl;
 		for (int i = 0; i < circles.size(); i++)
 		{
@@ -139,14 +160,24 @@ int main ( int argc, char ** argv )
 		//Process ROI
 		cv::Point dimpleCenter;
 		int dimpleRadius;
-		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 75, 10, 150);
-		cout << "Circles found: " << circles.size() << endl;
-		for (int i = 0; i < circles.size(); i++)
+		vector<cv::Vec3f> dimpleCircles;
+		if (circles.size() > 0)
 		{
-			dimpleCenter = cv::Point(cvRound(circles[i][0]), cvRound(circles[i][1]));
-			dimpleRadius = cvRound(circles[i][2]);
-			cv::circle(image, center, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
-			cv::circle(image, center, radius, cv::Scalar(255, 255, 255), 3, 8, 0);
+			int xctr = (center.x - radius > 0)? center.x - radius : 0;
+			int yctr = (center.y - radius > 0)? center.y - radius : 0;
+			int xwid = (xctr + radius * 2 < roi.cols)? radius * 2 : roi.cols - xctr;
+			int ywid = (yctr + radius * 2 < roi.rows)? radius * 2 : roi.rows - yctr;
+			//roi = roi(cv::Rect(xctr, yctr, radius * 2, radius * 2));
+			cv::threshold(roi, roi, 210, THRESHOLD_VAL, cv::THRESH_BINARY);
+			cv::HoughCircles(roi, dimpleCircles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 75, 10, 170);
+			cout << "Circles found: " << dimpleCircles.size() << endl;
+			for (int i = 0; i < dimpleCircles.size(); i++)
+			{
+				dimpleCenter = cv::Point(cvRound(dimpleCircles[i][0]), cvRound(dimpleCircles[i][1]));
+				dimpleRadius = cvRound(dimpleCircles[i][2]);
+				cv::circle(image, center, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
+				cv::circle(image, center, radius, cv::Scalar(255, 255, 255), 3, 8, 0);
+			}
 		}
 		cv::imshow("AutoDimple", image);
 		cv::waitKey(1000);
@@ -167,7 +198,8 @@ int main ( int argc, char ** argv )
 	Camera.release();
 
 	//Eject Slides
-	while (carousel_index != 4) { indexCarousel(); }
+	goToIndex(4);
+	//while (carousel_index != 4) { indexCarousel(); }
 	system("zenity --info --text=\"<b><big>Eject Slides</big></b>\n\nPull slides out of eject slot.\n\nTo advance carousel, press SPACE. To finish, press ESC.\"");
 	for (j = 0; j < 19; j++)
 	{

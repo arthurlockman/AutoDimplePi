@@ -10,7 +10,7 @@
 
 using namespace std;
 int THRESHOLD_VAL;
-int EROSION_SIZE;
+int EROSION_SIZE = 0;
 int DILATION_SIZE;
 
 void gracefulShutdown(int s) 
@@ -82,6 +82,19 @@ int main (int argc, char ** argv)
 		vector<cv::Vec3f> dimpleCircles;
 		if (circles.size() > 0)
 		{
+			int right, top, width, height;
+			right = center.x - radius + 10;
+			top = center.y - radius + 10;
+			(top < 0)? top = 0 : top = top;
+			(right < 0)? right = 0: right = right;
+			cout << "Top: " << top << " right: " << right;
+			width = 2 * radius - 20;
+			height = 2 * radius - 20;
+			(width + right > 500)? width = 500 : width = width;
+			(height + top > 500)? height = 500 : height = height;
+			cout << " width: " << width << " height: " << height << endl;
+			roi = roi(cv::Rect(right, top, width, height));
+
 			cv::adaptiveThreshold(roi, roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 75, 10);
 			
 			cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, 
@@ -104,8 +117,8 @@ int main (int argc, char ** argv)
 				dimpleRadius = cvRound(dimpleCircles[i][2]);
 				cv::circle(roi, dimpleCenter, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
 				cv::circle(roi, dimpleCenter, dimpleRadius, cv::Scalar(255, 255, 255), 3, 8, 0);
-				cv::circle(image, dimpleCenter, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
-				cv::circle(image, dimpleCenter, dimpleRadius, cv::Scalar(255, 255, 255), 3, 8, 0);
+				cv::circle(image, cv::Point(dimpleCenter.x + right - 10, dimpleCenter.y + top - 10), 3, cv::Scalar(255, 255, 255), -1, 8, 0);
+				cv::circle(image, cv::Point(dimpleCenter.x + right - 10, dimpleCenter.y + top - 10), dimpleRadius, cv::Scalar(255, 255, 255), 3, 8, 0);
 				cout << "Center at (" << dimpleCenter.x << "," << dimpleCenter.y << "), radius "<< dimpleRadius << endl;
 			}
 		}

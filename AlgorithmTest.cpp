@@ -65,7 +65,8 @@ int main (int argc, char ** argv)
 		cv::Point center;
 		int radius = -1;
 		std::vector<cv::Vec3f> circles;
-		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 50, 170, 230);
+		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, 
+				image.rows / 2, 100, 50, 170, 230);
 		cout << "Circles found: " << circles.size() << endl;
 		for (int i = 0; i < circles.size(); i++)
 		{
@@ -74,7 +75,8 @@ int main (int argc, char ** argv)
 			cv::circle(image, center, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
 			cv::circle(image, center, radius, cv::Scalar(255, 255, 255), 3, 8, 0);
 		}
-		cout << "Center at (" << center.x << "," << center.y << "), radius "<< radius << endl;
+		cout << "Center at (" << center.x << "," << center.y 
+		     << "), radius "<< radius << endl;
 		
 		//Process ROI
 		cv::Point dimpleCenter;
@@ -95,7 +97,8 @@ int main (int argc, char ** argv)
 			cout << " width: " << width << " height: " << height << endl;
 			roi = roi(cv::Rect(right, top, width, height));
 
-			cv::adaptiveThreshold(roi, roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 75, 10);
+			cv::adaptiveThreshold(roi, roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, 
+					cv::THRESH_BINARY, 75, 10);
 			
 			cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, 
 					cv::Size(2 * EROSION_SIZE + 1, 2 * EROSION_SIZE + 1), 
@@ -108,18 +111,27 @@ int main (int argc, char ** argv)
 			
 			cv::GaussianBlur(roi, roi, cv::Size(9, 9), 2, 2);
 			cv::Canny(roi, roi, THRESHOLD_VAL, THRESHOLD_VAL * 2);
-			cv::HoughCircles(roi, dimpleCircles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 25, 10, 170);
+			cv::HoughCircles(roi, dimpleCircles, CV_HOUGH_GRADIENT, 
+					1, image.rows / 2, 100, 25, 10, 170);
 			cout << "Circles found: " << dimpleCircles.size() << endl;
 			//cv::Mat circleDrawing(cv::Size(roi.cols, roi.rows), CV_8UC1);
 			for (int i = 0; i < dimpleCircles.size(); i++)
 			{
-				dimpleCenter = cv::Point(cvRound(dimpleCircles[i][0]), cvRound(dimpleCircles[i][1]));
+				dimpleCenter = cv::Point(cvRound(dimpleCircles[i][0]), 
+						cvRound(dimpleCircles[i][1]));
 				dimpleRadius = cvRound(dimpleCircles[i][2]);
-				cv::circle(roi, dimpleCenter, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
-				cv::circle(roi, dimpleCenter, dimpleRadius, cv::Scalar(255, 255, 255), 3, 8, 0);
-				cv::circle(image, cv::Point(dimpleCenter.x + right - 10, dimpleCenter.y + top - 10), 3, cv::Scalar(255, 255, 255), -1, 8, 0);
-				cv::circle(image, cv::Point(dimpleCenter.x + right - 10, dimpleCenter.y + top - 10), dimpleRadius, cv::Scalar(255, 255, 255), 3, 8, 0);
-				cout << "Center at (" << dimpleCenter.x << "," << dimpleCenter.y << "), radius "<< dimpleRadius << endl;
+				cv::circle(roi, dimpleCenter, 3, 
+						cv::Scalar(255, 255, 255), -1, 8, 0);
+				cv::circle(roi, dimpleCenter, dimpleRadius, 
+						cv::Scalar(255, 255, 255), 3, 8, 0);
+				cv::circle(image, cv::Point(dimpleCenter.x + right - 10, 
+							dimpleCenter.y + top - 10), 
+						3, cv::Scalar(255, 255, 255), -1, 8, 0);
+				cv::circle(image, cv::Point(dimpleCenter.x + right - 10, 
+							dimpleCenter.y + top - 10), 
+						dimpleRadius, cv::Scalar(255, 255, 255), 3, 8, 0);
+				cout << "Center at (" << dimpleCenter.x << "," 
+				     << dimpleCenter.y << "), radius "<< dimpleRadius << endl;
 			}
 		}
 		cv::imshow("AutoDimple", image);

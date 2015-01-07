@@ -20,16 +20,43 @@ using namespace std;
 int carousel_index = 1;
 int THRESHOLD_VAL = 1;
 
-void indexCarousel()
+void driveCarousel(int counts)
 {
-	cout << "Carousel at " << carousel_index << endl;
-	for (int i = 0; i < INDEX_COUNTS; i++)
+	cout << "Indexing carousel " << counts << " counts." <<endl;
+	int spindown = 0;
+	for (int i = 1000; i > PULSE_TIME; i -= 4)
+	{
+		digitalWrite(PULSE_PIN, HIGH);
+		delayMicroseconds(i);
+		digitalWrite(PULSE_PIN, LOW);
+		delayMicroseconds(i);
+		counts--;
+	}
+	for (int i = PULSE_TIME; i < 1000; i += 4)
+	{
+		spindown++;
+	}
+	for (int i = 0; i < counts - spindown; i++)
 	{
 		digitalWrite(PULSE_PIN, HIGH);
 		delayMicroseconds(PULSE_TIME);
 		digitalWrite(PULSE_PIN, LOW);
 		delayMicroseconds(PULSE_TIME);
 	}
+	for (int i = PULSE_TIME; i < 1000; i += 4)
+	{
+		digitalWrite(PULSE_PIN, HIGH);
+		delayMicroseconds(i);
+		digitalWrite(PULSE_PIN, LOW);
+		delayMicroseconds(i);
+	}
+	digitalWrite(PULSE_PIN, LOW);
+}
+
+void indexCarousel()
+{
+	cout << "Carousel at " << carousel_index << endl;
+	driveCarousel(INDEX_COUNTS);
 	(carousel_index == 19) ? carousel_index = 1 : carousel_index++;
 }
 
@@ -37,13 +64,7 @@ void goToIndex(int index)
 {
 	cout << "Driving to index " << index << endl;
 	int slots = abs((index + 19) - carousel_index);
-	for (int i = 0; i < INDEX_COUNTS * slots; i++)
-	{
-		digitalWrite(PULSE_PIN, HIGH);
-		delayMicroseconds(PULSE_TIME);
-		digitalWrite(PULSE_PIN, LOW);
-		delayMicroseconds(PULSE_TIME);
-	}
+	driveCarousel(INDEX_COUNTS * slots);
 	carousel_index = index;
 }
 
@@ -167,7 +188,7 @@ int main ( int argc, char ** argv )
 			int yctr = (center.y - radius > 0)? center.y - radius : 0;
 			int xwid = (xctr + radius * 2 < roi.cols)? radius * 2 : roi.cols - xctr;
 			int ywid = (yctr + radius * 2 < roi.rows)? radius * 2 : roi.rows - yctr;
-			//roi = roi(cv::Rect(xctr, yctr, radius * 2, radius * 2));
+			roi = roi(cv::Rect(xctr, yctr, radius * 2, radius * 2));
 			cv::threshold(roi, roi, 210, THRESHOLD_VAL, cv::THRESH_BINARY);
 			cv::HoughCircles(roi, dimpleCircles, CV_HOUGH_GRADIENT, 1, image.rows / 2, 100, 75, 10, 170);
 			cout << "Circles found: " << dimpleCircles.size() << endl;

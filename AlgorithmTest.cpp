@@ -12,6 +12,8 @@ using namespace std;
 int THRESHOLD_VAL;
 int EROSION_SIZE = 0;
 int DILATION_SIZE;
+int ADAPTIVE_1;
+int ADAPTIVE_2;
 
 void gracefulShutdown(int s) 
 {
@@ -41,9 +43,13 @@ int main (int argc, char ** argv)
 	cv::createTrackbar("Threshold", "AutoDimple", &THRESHOLD_VAL, 255);
 	cv::setTrackbarPos("Threshold", "AutoDimple", 255);
 	cv::createTrackbar("ErosionSize", "AutoDimple", &EROSION_SIZE, 255);
-	cv::setTrackbarPos("ErosionSize", "AutoDimple", 12);
+	cv::setTrackbarPos("ErosionSize", "AutoDimple", 2);
 	cv::createTrackbar("DilationSize", "AutoDimple", &DILATION_SIZE, 255);
-	cv::setTrackbarPos("DilationSize", "AutoDimple", 21);
+	cv::setTrackbarPos("DilationSize", "AutoDimple", 11);
+	cv::createTrackbar("AdaptiveThresh1", "AutoDimple", &ADAPTIVE_1, 255);	
+	cv::setTrackbarPos("AdaptiveThresh1", "AutoDimple", 45);
+	cv::createTrackbar("AdaptiveThresh2", "AutoDimple", &ADAPTIVE_2, 255);	
+	cv::setTrackbarPos("AdaptiveThresh2", "AutoDimple", 12);
 	
 	Camera.grab();
 	Camera.retrieve(image);
@@ -57,23 +63,38 @@ int main (int argc, char ** argv)
 		image = image(cv::Rect(360, 100, 500, 500));
 		//cv::imshow("AutoDimple", image);
 		//cv::waitKey(1);
-
+		
+		cv::Mat origImage;
+		image.copyTo(origImage);
 		equalizeHist(image, image);
 		image.copyTo(roi);
 		blur(image, image, cv::Size(3, 3));
+		
+		cv::adaptiveThreshold(image, image, 255, cv::ADAPTIVE_THRESH_MEAN_C,
+					cv::THRESH_BINARY, ADAPTIVE_1, ADAPTIVE_2);
+		cv::Canny(image, image, THRESHOLD_VAL, THRESHOLD_VAL * 2);
 
+		cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, 
+				cv::Size(2 * DILATION_SIZE + 1, 2 * DILATION_SIZE + 1), 
+				cv::Point(DILATION_SIZE, DILATION_SIZE));
+		//cv::dilate(image, image, element);
+		element = cv::getStructuringElement(cv::MORPH_ELLIPSE, 
+				cv::Size(2 * EROSION_SIZE + 1, 2 * EROSION_SIZE + 1), 
+				cv::Point(EROSION_SIZE, EROSION_SIZE));
+		//cv::erode(image, image, element);
+	
 		cv::Point center;
 		int radius = -1;
 		std::vector<cv::Vec3f> circles;
 		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, 
-				image.rows / 2, 100, 50, 170, 230);
+				image.rows / 2, 200, 25, 190, 210);
 		cout << "Circles found: " << circles.size() << endl;
 		for (int i = 0; i < circles.size(); i++)
 		{
 			center = cv::Point(cvRound(circles[i][0]), cvRound(circles[i][1]));
 			radius = cvRound(circles[i][2]);
-			cv::circle(image, center, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
-			cv::circle(image, center, radius, cv::Scalar(255, 255, 255), 3, 8, 0);
+			cv::circle(origImage, center, 3, cv::Scalar(255, 255, 255), -1, 8, 0);
+			cv::circle(origImage, center, radius, cv::Scalar(255, 255, 255), 3, 8, 0);
 		}
 		cout << "Center at (" << center.x << "," << center.y 
 		     << "), radius "<< radius << endl;
@@ -95,7 +116,7 @@ int main (int argc, char ** argv)
 			(width + right > 500)? width = 500 : width = width;
 			(height + top > 500)? height = 500 : height = height;
 			cout << " width: " << width << " height: " << height << endl;
-			roi = roi(cv::Rect(right, top, width, height));
+			//roi = roi(cv::Rect(right, top, width, height));
 
 			cv::adaptiveThreshold(roi, roi, 255, cv::ADAPTIVE_THRESH_MEAN_C, 
 					cv::THRESH_BINARY, 75, 10);
@@ -134,7 +155,7 @@ int main (int argc, char ** argv)
 				     << dimpleCenter.y << "), radius "<< dimpleRadius << endl;
 			}
 		}
-		cv::imshow("AutoDimple", image);
+		cv::imshow("AutoDimple", origImage);
 		cv::imshow("Threshold", roi);
 		cv::waitKey(0);
 	}

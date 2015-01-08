@@ -145,17 +145,17 @@ int main (int argc, char ** argv)
 						cv::Scalar(255, 255, 255), -1, 8, 0);
 				cv::circle(roi, dimpleCenter, dimpleRadius, 
 						cv::Scalar(255, 255, 255), 3, 8, 0);
-				cv::circle(image, cv::Point(dimpleCenter.x + right - 10, 
+				cv::circle(origImage, cv::Point(dimpleCenter.x + right - 10, 
 							dimpleCenter.y + top - 10), 
 						3, cv::Scalar(255, 255, 255), -1, 8, 0);
-				cv::circle(image, cv::Point(dimpleCenter.x + right - 10, 
+				cv::circle(origImage, cv::Point(dimpleCenter.x + right - 10, 
 							dimpleCenter.y + top - 10), 
 						dimpleRadius, cv::Scalar(255, 255, 255), 3, 8, 0);
 				cout << "Center at (" << dimpleCenter.x << "," 
 				     << dimpleCenter.y << "), radius "<< dimpleRadius << endl;
 			}
 		}
-		cv::imshow("AutoDimple", origImage);
+		cv::imshow("autoDimple", origImage);
 		cv::imshow("Threshold", roi);
 		cv::waitKey(0);
 	}

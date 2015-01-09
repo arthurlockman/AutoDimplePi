@@ -7,6 +7,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <signal.h>
 #include <math.h>
+#include <fstream>
 
 #define ENABLE_PIN 15
 #define PULSE_PIN 1
@@ -145,18 +146,31 @@ int main ( int argc, char ** argv )
 	cv::imshow("AutoDimple", image);
 	cv::waitKey(1000);
 	cout << "Loaded slides: " << loaded_slides << endl;
+	
+	
+	//Write image
+	time_t t = time(0);
+	struct tm * now = localtime(&t);
+	ostringstream dataFileName;
+	dataFileName << "/home/pi/Desktop/AutoDimple Pictures/images_" << (now->tm_year + 1900) 
+		<< "_" << (now->tm_mon + 1) << "_" << (now->tm_mday) <<  "-" 
+		<< (now->tm_hour) << "_" << (now->tm_min) << "_" << (now->tm_sec) 
+		<< ".csv";
+	cout << dataFileName.str() << endl;
+	ofstream dataFile;
+	dataFile.open(dataFileName.str());
+	dataFile << "Image,DVT Radius,DVT Volume,DVT X Offset,DVT Y Offset" << endl;
 	for (int i = 0; i < loaded_slides; i++)
 	{
 		checkWindow();
 		if (i == 11) indexCarousel();
-		//delay(1000);
 		
 		cout << "Grabbing image..." << endl;
 		Camera.grab();
 		Camera.retrieve(image);
 		image = image(cv::Rect(360, 100, 500, 500));
 		//cv::imshow("AutoDimple", image);
-		//cv::waitKey(1);
+		cv::waitKey(1);
 		
 		cv::Mat origImage;
 		image.copyTo(origImage);
@@ -168,15 +182,6 @@ int main ( int argc, char ** argv )
 					cv::THRESH_BINARY, 45, 12);
 		cv::Canny(image, image, 255, 255 * 2);
 
-		cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, 
-				cv::Size(2 * DILATION_SIZE + 1, 2 * DILATION_SIZE + 1), 
-				cv::Point(DILATION_SIZE, DILATION_SIZE));
-		//cv::dilate(image, image, element);
-		element = cv::getStructuringElement(cv::MORPH_ELLIPSE, 
-				cv::Size(2 * EROSION_SIZE + 1, 2 * EROSION_SIZE + 1), 
-				cv::Point(EROSION_SIZE, EROSION_SIZE));
-		//cv::erode(image, image, element);
-	
 		cv::Point center;
 		int radius = -1;
 		std::vector<cv::Vec3f> circles;
@@ -225,8 +230,9 @@ int main ( int argc, char ** argv )
 		}
 		cv::imshow("AutoDimple", origImage);
 		cv::waitKey(1);
+		cv::waitKey(1);
 		indexCarousel();
-
+		
 		//Write image
 		time_t t = time(0);
 		struct tm * now = localtime(&t);
@@ -237,10 +243,14 @@ int main ( int argc, char ** argv )
 			<< ".jpg";
 		cout << os.str() << endl;
 		cv::imwrite(os.str(), origImage);
+		
+		//Write data file
+		dataFile << os.str() << "," << dimpleRadius << "," << "vol" << "," 
+			<< (dimpleCenter.x - center.x) << "," << (center.y - dimpleCenter.y) << endl;
 		checkWindow();
 	}
 	Camera.release();
-
+	dataFile.close();
 	//Eject Slides
 	goToIndex(4);
 	//while (carousel_index != 4) { indexCarousel(); }

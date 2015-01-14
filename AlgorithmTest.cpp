@@ -89,7 +89,7 @@ int main (int argc, char ** argv)
 		cv::HoughCircles(image, circles, CV_HOUGH_GRADIENT, 1, 
 				image.rows / 2, 200, 25, 190, 210);
 		cout << "Circles found: " << circles.size() << endl;
-		for (int i = 0; i < circles.size(); i++)
+		for (int i = 0; i < (int)circles.size(); i++)
 		{
 			center = cv::Point(cvRound(circles[i][0]), cvRound(circles[i][1]));
 			radius = cvRound(circles[i][2]);
@@ -116,7 +116,7 @@ int main (int argc, char ** argv)
 			cv::HoughCircles(roi, dimpleCircles, CV_HOUGH_GRADIENT, 
 					1, roi.rows, 100, 25, 0, 175);
 			cout << "Circles found: " << dimpleCircles.size() << endl;
-			for (int i = 0; i < dimpleCircles.size(); i++)
+			for (int i = 0; i < (int)dimpleCircles.size(); i++)
 			{
 				dimpleCenter = cv::Point(cvRound(dimpleCircles[i][0]), 
 						cvRound(dimpleCircles[i][1]));

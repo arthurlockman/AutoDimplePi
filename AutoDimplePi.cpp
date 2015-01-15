@@ -245,7 +245,7 @@ int main ( int argc, char ** argv )
 		cv::imwrite(os.str(), origImage);
 		
 		//Write data file
-		dataFile << os.str() << "," << dimpleRadius << "," << (0.102 * dimpleRadius - 6.1806) << "," 
+		dataFile << os.str() << "," << dimpleRadius << "," << (0.1012 * dimpleRadius - 6.2837) << "," 
 			<< (center.y - dimpleCenter.y) << "," << (dimpleCenter.x - center.x) << endl;
 		checkWindow();
 	}

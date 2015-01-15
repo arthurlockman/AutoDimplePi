@@ -81,14 +81,14 @@ void homeCarousel()
 
 void gracefulShutdown(int s) 
 {
-	cout << "Caught SIGINT, shutting down." << endl;
+	cout << "Caught SIGINT (" << s << "), shutting down." << endl;
 	digitalWrite(ENABLE_PIN, HIGH);
 	exit(0);
 }
 
 void checkWindow()
 {
-	int c = cv::waitKey(1);
+	cv::waitKey(1);
 	if (!cvGetWindowHandle("AutoDimple")) gracefulShutdown(2);
 }
 
